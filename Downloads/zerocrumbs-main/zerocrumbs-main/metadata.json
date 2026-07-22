@@ -1,0 +1,8 @@
+{
+  "name": "Copy of ZeroCrumbs.",
+  "description": "A socially impactful platform connecting food donors with NGOs to reduce waste and fight hunger through surplus food redistribution.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
