@@ -1,0 +1,7 @@
+{
+  "name": "MindEase Student Wellness ",
+  "description": "A comprehensive mental health support platform for students, providing AI-powered counseling, personalized coping strategies, and crisis resources.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
