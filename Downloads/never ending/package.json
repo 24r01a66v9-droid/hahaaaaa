@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix ./hahaaaaa-main run dev",
+    "start": "npm --prefix ./hahaaaaa-main run start",
+    "build": "npm --prefix ./hahaaaaa-main run build"
+  }
+}
