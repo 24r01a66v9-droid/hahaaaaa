@@ -68,12 +68,13 @@ export default function FoundersTeamPage() {
                 ? item.category
                 : "founders";
 
+            const rawBio = typeof item.bio === "string" ? item.bio.trim() : "";
             return {
               id: String(item.id),
               name: item.name || "Leadership Member",
               role: item.role || (category === "founders" ? "Founder" : category === "previousBoard" ? "Former Board Member" : "Executive Board Member"),
               tenure: item.tenure || "2026",
-              bio: item.bio || "Dedicated member of the Ikshana leadership team.",
+              bio: rawBio,
               image: item.image || createAvatar(item.name || "Member", "#8b1d3b"),
               category,
               displayOrder: Number(item.display_order ?? index + 1),
@@ -149,6 +150,10 @@ export default function FoundersTeamPage() {
       formData.append("display_order", String(targetDisplayOrder));
       formData.append("linkedin_url", newMember.linkedinUrl.trim());
       formData.append("instagram_url", newMember.instagramUrl.trim());
+
+      if (!newMember.bio.trim()) {
+        formData.set("bio", "");
+      }
 
       if (uploadedFile) {
         formData.append("file", uploadedFile);
@@ -468,7 +473,9 @@ export default function FoundersTeamPage() {
                               )}
                             </div>
 
-                            <p className="mt-4 text-sm leading-6 text-brand-maroon/70">{person.bio}</p>
+                            {person.bio ? (
+                              <p className="mt-4 text-sm leading-6 text-brand-maroon/70">{person.bio}</p>
+                            ) : null}
 
                             <div className="mt-5 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2 text-[#5B3FD4]">

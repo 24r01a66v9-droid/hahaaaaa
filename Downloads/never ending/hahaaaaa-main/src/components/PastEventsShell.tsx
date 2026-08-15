@@ -69,7 +69,7 @@ export default function PastEventsShell() {
                 Past Events & Initiatives
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-relaxed text-brand-maroon/70 sm:text-xl">
-                Placeholder description for the story of our community-led work, partnerships, and impact.
+                Placeholder description for the story of our community-led work and impact.
               </p>
             </div>
             <div className="rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 px-6 py-5 text-sm text-brand-maroon/70">

@@ -24,7 +24,7 @@ export default function Impact() {
             className="flex flex-col items-center gap-4"
           >
             <span className="text-brand-maroon font-bold tracking-[0.4em] uppercase text-[10px] mb-2">Real Numbers</span>
-            <h2 className="text-6xl md:text-7xl font-serif tracking-tighter text-white">Our Growing <span className="italic text-brand-maroon">Impact.</span></h2>
+            <h2 className="text-6xl md:text-7xl font-serif tracking-tighter text-white">Our Growing <span className="italic text-brand-maroon">Impact</span></h2>
             <div className="h-[1px] w-24 bg-brand-maroon/40 mt-4"></div>
           </motion.div>
         </div>

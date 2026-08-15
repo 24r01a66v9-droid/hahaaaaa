@@ -13,7 +13,7 @@ export default function MissionVision() {
   ];
 
   return (
-    <section id="about" className="pt-8 pb-24 px-6 bg-brand-cream relative overflow-hidden">
+    <section id="about" className="pt-2 pb-24 px-6 bg-brand-cream relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none">
         <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[600px] h-[600px] bg-brand-maroon rounded-full blur-[120px]" />

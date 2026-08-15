@@ -51,8 +51,8 @@ export default function Hero() {
         >
           <Logo className="w-20 h-20" />
           <div>
-            <h1 className="text-3xl font-serif font-black tracking-[0.4em] text-brand-maroon leading-none">IKSHANA</h1>
-            <p className="text-[10px] uppercase tracking-[0.5em] text-brand-maroon/40 font-bold mt-1">Foundation</p>
+            <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-[0.15em] text-brand-maroon leading-none">IKSHANA</h1>
+            <p className="text-[10px] uppercase tracking-[0.45em] text-brand-maroon/45 font-bold mt-1">Foundation</p>
           </div>
         </motion.div>
 

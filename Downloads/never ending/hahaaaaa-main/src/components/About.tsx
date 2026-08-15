@@ -199,15 +199,20 @@ export default function About() {
               className="h-full w-full object-cover"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-8 sm:p-12 lg:p-16">
-              <p className="max-w-3xl text-lg leading-relaxed text-white/95 italic border-l-4 border-white/40 pl-6 sm:text-xl">
-                We focus on innovation, learning, and growth through community-driven projects and service. Explore our team and discover the passion, creativity, and dedication that drive our mission.
-              </p>
-            </div>
           </div>
         </motion.div>
       )}
+
+      <motion.div
+        initial={{ y: 30, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        viewport={{ once: true }}
+        className="mt-12 mb-16 max-w-7xl mx-auto px-6"
+      >
+        <p className="max-w-3xl text-lg leading-relaxed text-brand-maroon/80 italic sm:text-xl">
+          We work to support communities in need, raise awareness about important social causes, and inspire people to come together for a better tomorrow.
+        </p>
+      </motion.div>
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-8" />
@@ -222,7 +227,6 @@ export default function About() {
               <div className="h-[1px] w-12 bg-brand-maroon"></div>
             </div>
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-6xl md:text-8xl font-serif tracking-tighter leading-[0.9] text-brand-maroon">Welcome to <br /><span className="italic text-brand-maroon/40">Our Website.</span></h2>
               {isAdmin && (
                 <button 
                   onClick={() => { setNewPhoto({ caption: "", category: "about", file: null }); setIsAdding(true); }}
@@ -235,36 +239,8 @@ export default function About() {
             </div>
 
             <div className="space-y-8 text-brand-maroon/80 text-xl leading-relaxed">
-              <p className="border-l-4 border-brand-maroon/20 pl-6 italic">
-                We focus on innovation, learning, and growth through community-driven projects and service.
-              </p>
-              <p>
-                Explore our team and discover the passion, creativity, and dedication that drive our mission. We believe in innovation, collaboration, and building meaningful experiences for everyone we serve.
-              </p>
-              <div className="grid gap-6 pt-8 sm:grid-cols-2 xl:grid-cols-3">
-                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4">
-                    <Users size={22} />
-                  </div>
-                  <h3 className="text-4xl font-serif text-brand-maroon mb-1">100+</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Volunteers</p>
-                </div>
-                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4">
-                    <HandHeart size={22} />
-                  </div>
-                  <h3 className="text-4xl font-serif text-brand-maroon mb-1">30+</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Donation Drives</p>
-                </div>
-                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4">
-                    <Sparkles size={22} />
-                  </div>
-                  <h3 className="text-4xl font-serif text-brand-maroon mb-1">5+</h3>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Awareness Programs</p>
-                </div>
-              </div>
-              <div className="grid gap-4 pt-4 sm:grid-cols-2 xl:grid-cols-2">
+              {/* Founded & Community Section */}
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="flex items-center gap-3 rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-5 shadow-sm">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-maroon text-white">
                     <CalendarDays size={22} />
@@ -279,12 +255,41 @@ export default function About() {
                 </div>
               </div>
 
+              {/* Volunteers & Donation Drives Section */}
+              <div className="grid gap-6 pt-4 sm:grid-cols-2">
+                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4">
+                    <Users size={22} />
+                  </div>
+                  <h3 className="text-4xl font-serif text-brand-maroon mb-1">100+</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Volunteers</p>
+                </div>
+                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4">
+                    <HandHeart size={22} />
+                  </div>
+                  <h3 className="text-4xl font-serif text-brand-maroon mb-1">30+</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Donation Drives</p>
+                </div>
+              </div>
+
+              {/* Awareness Section - Centered */}
+              <div className="flex justify-center pt-0">
+                <div className="group rounded-[2rem] border border-brand-maroon/10 bg-brand-maroon/5 p-6 shadow-sm w-full sm:w-1/2">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-maroon text-white flex items-center justify-center mb-4 mx-auto">
+                    <Sparkles size={22} />
+                  </div>
+                  <h3 className="text-4xl font-serif text-brand-maroon mb-1 text-center">5+</h3>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40 text-center">Awareness Programs</p>
+                </div>
+              </div>
+
             </div>
           </motion.div>
         </div>
 
         {/* About Archive Section */}
-        <div className="space-y-12">
+        <div className="space-y-8">
           {photos.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <AnimatePresence mode="popLayout">

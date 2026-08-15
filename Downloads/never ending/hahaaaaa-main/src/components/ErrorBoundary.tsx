@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div className="min-h-screen bg-brand-cream flex items-center justify-center px-6">
           <div className="max-w-md rounded-[2rem] border border-stone-200 bg-white p-8 text-center shadow-sm">
-            <h2 className="text-2xl font-serif text-brand-maroon">The page could not load.</h2>
+            <h2 className="text-2xl font-serif text-brand-maroon">The page could not load</h2>
             <p className="mt-3 text-sm text-brand-maroon/70">
               Please refresh the page or try again in a moment.
             </p>

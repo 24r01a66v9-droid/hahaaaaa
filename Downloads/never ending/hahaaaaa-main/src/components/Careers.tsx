@@ -108,7 +108,7 @@ export default function Careers() {
             <div>
               <h2 className="text-7xl md:text-9xl font-serif tracking-tighter leading-[0.85] text-brand-maroon">
                 Careers & <br />
-                <span className="italic underline underline-offset-8 decoration-brand-maroon/10">Volunteering.</span>
+                <span className="italic underline underline-offset-8 decoration-brand-maroon/10">Volunteering</span>
               </h2>
               
             </div>
@@ -128,19 +128,22 @@ export default function Careers() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16 flex items-center gap-6 p-8 bg-white rounded-[2rem] border border-stone-100 shadow-sm"
+          className="mb-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 p-8 md:p-12 bg-white rounded-[3rem] text-brand-maroon border border-stone-100"
         >
-          <div className="w-14 h-14 bg-brand-maroon/5 rounded-2xl flex items-center justify-center text-brand-maroon shrink-0">
-            <Users size={28} />
-          </div>
-          <div className="flex-grow">
-            <h3 className="text-xl font-serif text-brand-maroon">Interested in joining Ikshana?</h3>
+          <div className="flex items-start gap-6 flex-grow">
+            <div className="w-14 h-14 bg-brand-maroon/5 rounded-2xl flex items-center justify-center text-brand-maroon shrink-0">
+              <Users size={28} />
+            </div>
+            <div>
+              <h3 className="text-xl font-serif text-brand-maroon mb-2">Interested in joining Ikshana?</h3>
+              <p className="text-brand-maroon font-serif text-base leading-relaxed">Be part of a community working together to create meaningful change.</p>
+            </div>
           </div>
           <a
             href="https://forms.gle/hfK5yXUjBdG6QKDf8"
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 flex items-center gap-2 bg-brand-maroon text-white px-6 py-3 rounded-xl font-bold tracking-widest uppercase text-[10px] hover:bg-stone-900 transition-all"
+            className="shrink-0 flex items-center gap-2 bg-brand-maroon text-white px-6 py-3 rounded-xl font-bold tracking-widest uppercase text-[10px] hover:bg-stone-900 transition-all whitespace-nowrap"
           >
             <Mail size={16} /> Apply Now
           </a>
@@ -176,11 +179,11 @@ export default function Careers() {
                           {jobTypeLabels[job.job_type] || job.job_type}
                         </span>
                         {job.department && (
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-brand-maroon/40">{job.department}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-brand-maroon/70">{job.department}</span>
                         )}
                       </div>
                       <h3 className="text-2xl sm:text-3xl font-serif text-brand-maroon">{job.title}</h3>
-                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-brand-maroon/50">
+                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-brand-maroon/70">
                         {job.location && (
                           <span className="flex items-center gap-1.5"><MapPin size={14} /> {job.location}</span>
                         )}
@@ -188,7 +191,7 @@ export default function Careers() {
                       </div>
                     </div>
                   </div>
-                  <ChevronDown size={20} className={`text-brand-maroon/40 shrink-0 transition-transform ${expandedId === job.id ? "rotate-180" : ""}`} />
+                  <ChevronDown size={20} className={`text-brand-maroon/60 shrink-0 transition-transform ${expandedId === job.id ? "rotate-180" : ""}`} />
                 </button>
 
                 <AnimatePresence>
@@ -202,13 +205,13 @@ export default function Careers() {
                       <div className="px-8 sm:px-10 pb-10 pt-0 border-t border-stone-50">
                         <div className="grid md:grid-cols-2 gap-10 pt-8">
                           <div>
-                            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon/40 mb-4">About the Role</h4>
-                            <p className="text-brand-maroon/70 leading-relaxed">{job.description}</p>
+                            <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon/60 mb-4">About the Role</h4>
+                            <p className="text-brand-maroon/85 leading-relaxed">{job.description}</p>
                           </div>
                           {job.requirements && (
                             <div>
-                              <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon/40 mb-4">Requirements</h4>
-                              <p className="text-brand-maroon/70 leading-relaxed whitespace-pre-line">{job.requirements}</p>
+                              <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon/60 mb-4">Requirements</h4>
+                              <p className="text-brand-maroon/85 leading-relaxed whitespace-pre-line">{job.requirements}</p>
                             </div>
                           )}
                         </div>
@@ -224,7 +227,7 @@ export default function Careers() {
                           {isAdmin && (
                             <button
                               onClick={() => removeJob(job.id)}
-                              className="flex items-center gap-2 text-brand-maroon/40 hover:text-brand-maroon text-[10px] font-bold uppercase tracking-widest transition-colors"
+                              className="flex items-center gap-2 text-brand-maroon/60 hover:text-brand-maroon text-[10px] font-bold uppercase tracking-widest transition-colors"
                             >
                               <Trash2 size={14} /> Remove Position
                             </button>

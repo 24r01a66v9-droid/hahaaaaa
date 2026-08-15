@@ -253,7 +253,7 @@ export default function SeekHelp() {
             <div className="h-[1px] w-12 bg-brand-maroon"></div>
             <span className="text-brand-maroon font-bold tracking-[0.2em] uppercase text-[10px]">Emergency Support</span>
           </motion.div>
-            <h2 className="text-6xl md:text-7xl font-serif mb-10 tracking-tighter leading-none text-brand-maroon">Seek Medical <br /><span className="italic text-brand-maroon/40">Help.</span></h2>
+            <h2 className="text-6xl md:text-7xl font-serif mb-10 tracking-tighter leading-none text-brand-maroon">Seek Medical <br /><span className="italic text-brand-maroon/40">Help</span></h2>
             {isAdmin && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-maroon/10 text-brand-maroon rounded-full mb-8 border border-brand-maroon/20">
                 <Users size={14} />
@@ -545,7 +545,7 @@ export default function SeekHelp() {
               <div className="h-[1px] w-12 bg-brand-maroon"></div>
               <span className="text-brand-maroon font-bold tracking-[0.2em] uppercase text-[10px]">Community Support</span>
             </motion.div>
-            <h2 className="text-5xl md:text-6xl font-serif tracking-tighter leading-none text-brand-maroon">Active <br /><span className="italic text-brand-maroon/40">Requests.</span></h2>
+            <h2 className="text-5xl md:text-6xl font-serif tracking-tighter leading-none text-brand-maroon">Active <br /><span className="italic text-brand-maroon/40">Requests</span></h2>
           </div>
           <div className="flex flex-col items-end gap-4">
             <p className="text-brand-maroon/60 max-w-md italic text-right">

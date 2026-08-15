@@ -23,7 +23,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-white/70 max-w-md mb-12 leading-relaxed text-xl italic font-serif">
-              "Fostering a community of leaders, creators, and change-makers. Dedicated to building a better tomorrow through student-led innovation and compassion."
+              Fostering a community of compassionate leaders, creators, and change-makers dedicated to supporting those in need, spreading awareness, and creating a better tomorrow.
             </p>
             {/* Social icons */}
           </div>

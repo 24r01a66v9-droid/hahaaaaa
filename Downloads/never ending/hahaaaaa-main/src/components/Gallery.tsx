@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ImageIcon, Plus, X, Upload, Trash2, Camera } from "lucide-react";
+import { ImageIcon, Plus, X, Upload, Trash2, Camera, GripVertical } from "lucide-react";
 import { buildAuthRequestInit } from "../auth/fetchWithAuth";
 import { useAuth } from "../context/AuthContext";
 
@@ -20,6 +20,9 @@ export default function Gallery() {
   const [loading, setLoading] = useState(false);
   const [newImage, setNewImage] = useState({ title: "", category: "Event", file: null as File | null });
   const [dragActive, setDragActive] = useState(false);
+  const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+  const [dragOverImageId, setDragOverImageId] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load images from API on mount
@@ -29,7 +32,13 @@ export default function Gallery() {
         const response = await fetch("/api/photos?category=gallery");
         if (response.ok) {
           const data = await response.json();
-          setImages(data);
+          // Sort by display_order if available, otherwise by creation order
+          const sorted = data.sort((a: any, b: any) => {
+            const orderA = a.display_order ?? a.created_at ?? 0;
+            const orderB = b.display_order ?? b.created_at ?? 0;
+            return orderA - orderB;
+          });
+          setImages(sorted);
         }
       } catch (e) {
         console.error("Failed to fetch gallery images", e);
@@ -114,6 +123,90 @@ export default function Gallery() {
     }
   };
 
+  const handleImageDragStart = (e: React.DragEvent, id: string) => {
+    if (!isAdmin) return;
+    setDraggedImageId(id);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", id);
+    }
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, id: string) => {
+    if (!isAdmin) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+    setDragOverImageId(id);
+  };
+
+  const handleImageDrop = async (e: React.DragEvent, targetId: string) => {
+    if (!isAdmin) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverImageId(null);
+
+    // Get the dragged image ID from state (more reliable than dataTransfer in React)
+    const draggedId = draggedImageId;
+    
+    if (!draggedId || draggedId === targetId) {
+      setDraggedImageId(null);
+      return;
+    }
+
+    // Reorder images
+    const draggedIndex = images.findIndex(img => img.id === draggedId);
+    const targetIndex = images.findIndex(img => img.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedImageId(null);
+      return;
+    }
+
+    // Create new array with swapped items
+    const newImages = Array.from(images);
+    const temp = newImages[draggedIndex];
+    newImages[draggedIndex] = newImages[targetIndex];
+    newImages[targetIndex] = temp;
+    
+    console.log("Reordering:", draggedId, "->", targetId, "New order:", newImages.map(i => i.id));
+    
+    // Update state immediately
+    setImages(newImages);
+    setDraggedImageId(null);
+
+    // Send new order to server
+    setReordering(true);
+    try {
+      const orderMap = newImages.reduce((acc, img, idx) => ({ ...acc, [img.id]: idx }), {});
+      const response = await fetch("/api/photos/reorder", buildAuthRequestInit({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: orderMap }),
+      }));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to save order:", errorData);
+      }
+    } catch (e) {
+      console.error("Failed to reorder photos", e);
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const handleImageDragEnd = () => {
+    setDraggedImageId(null);
+    setDragOverImageId(null);
+  };
+
+  const handleImageDragLeave = () => {
+    setDragOverImageId(null);
+  };
+
   return (
     <section id="gallery" className="py-32 px-6 bg-[#fffcfc] overflow-hidden relative">
       <div className="absolute top-0 right-0 w-full h-full opacity-[0.02] pointer-events-none">
@@ -140,7 +233,7 @@ export default function Gallery() {
               className="text-7xl md:text-9xl font-serif leading-[0.85] tracking-tighter mb-10"
             >
               Foundation <br />
-              <span className="italic text-brand-maroon underline underline-offset-8 decoration-brand-maroon/10">Memories.</span>
+              <span className="italic text-brand-maroon underline underline-offset-8 decoration-brand-maroon/10">Memories</span>
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0 }}
@@ -197,34 +290,52 @@ export default function Gallery() {
             </div>
           </motion.div>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimatePresence mode="popLayout">
               {images.map((image, index) => (
                 <motion.div
                   key={image.id}
                   layout
+                  layoutId={image.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="break-inside-avoid group relative rounded-[2.5rem] overflow-hidden bg-white border border-brand-maroon/5 hover:shadow-2xl transition-all duration-500"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  draggable={isAdmin}
+                  onDragStart={(e) => handleImageDragStart(e as any, image.id)}
+                  onDragOver={(e) => handleImageDragOver(e as any, image.id)}
+                  onDrop={(e) => handleImageDrop(e as any, image.id)}
+                  onDragLeave={handleImageDragLeave}
+                  onDragEnd={handleImageDragEnd}
+                  className={`group relative rounded-[2.5rem] overflow-hidden bg-white border transition-all duration-500 ${
+                    draggedImageId === image.id 
+                      ? "opacity-50 border-brand-maroon scale-95" 
+                      : dragOverImageId === image.id
+                      ? "border-brand-maroon/60 shadow-xl"
+                      : "border-brand-maroon/5 hover:shadow-2xl"
+                  } ${isAdmin ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
                 >
-                  <div className="relative aspect-auto overflow-hidden">
+                  <div className="relative aspect-[3/4] overflow-hidden">
                     <img 
                       src={image.url} 
                       alt={image.title}
-                      className="w-full h-auto object-cover transition-transform duration-1000 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                     />
                     {isAdmin && (
-                      <div className="absolute inset-0 bg-brand-maroon/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
-                        <button 
-                          onClick={() => removeImage(image.id)}
-                          className="w-14 h-14 bg-white text-brand-maroon rounded-full flex items-center justify-center hover:bg-stone-900 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 shadow-xl"
-                          title="Delete from archive"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
+                      <>
+                        <div className="absolute top-4 left-4 bg-white/90 text-brand-maroon rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-sm pointer-events-none">
+                          <GripVertical size={18} />
+                        </div>
+                        <div className="absolute inset-0 bg-brand-maroon/60 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
+                          <button 
+                            onClick={() => removeImage(image.id)}
+                            className="w-14 h-14 bg-white text-brand-maroon rounded-full flex items-center justify-center hover:bg-stone-900 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 shadow-xl"
+                            title="Delete from archive"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
                   
@@ -272,7 +383,7 @@ export default function Gallery() {
                   >
                     <X size={16} /> Close
                   </button>
-                  <h3 className="text-5xl font-serif mb-6 leading-none">Share a <br /><span className="italic text-stone-400">Moment.</span></h3>
+                  <h3 className="text-5xl font-serif mb-6 leading-none">Share a <br /><span className="italic text-stone-400">Moment</span></h3>
                   <p className="text-stone-500 leading-relaxed mb-8">
                     Contribute to the Ikshana visual archive. Your photos help us document the journey of impact and community building.
                   </p>

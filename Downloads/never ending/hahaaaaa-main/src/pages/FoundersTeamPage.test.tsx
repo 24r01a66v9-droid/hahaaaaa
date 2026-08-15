@@ -64,4 +64,27 @@ describe('FoundersTeamPage', () => {
     const card = (await screen.findByText('Ava')).closest('article');
     expect(card).toHaveAttribute('draggable', 'true');
   });
+
+  it('keeps biography optional when the data has no bio text', async () => {
+    window.localStorage.setItem(
+      'ikshana-leadership-members',
+      JSON.stringify([
+        {
+          id: 'member-1',
+          name: 'Asha Rao',
+          role: 'Founder',
+          tenure: '2026',
+          bio: '',
+          image: 'avatar-1',
+          category: 'founders',
+          displayOrder: 1,
+        },
+      ]),
+    );
+
+    render(<FoundersTeamPage />);
+
+    expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
+    expect(screen.queryByText(/Dedicated member of the Ikshana leadership team/i)).not.toBeInTheDocument();
+  });
 });

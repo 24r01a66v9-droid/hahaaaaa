@@ -33,10 +33,9 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }: A
         onClose();
       } else if (mode === 'forgot-password') {
         const result = await forgotPassword(email);
-        setSuccess(result?.message || 'If an account exists for that email, a reset link has been sent.');
-        if (result?.resetUrl) {
-          setResetUrl(result.resetUrl);
-        }
+        const message = result?.message || 'If an account exists for that email, a reset link has been sent.';
+        setSuccess(message);
+        setResetUrl(result?.resetUrl || '/reset-password');
       } else {
         await register(name, email, password);
         setMode('login');
@@ -99,10 +98,10 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }: A
             {success && (
               <div className="p-4 rounded-2xl mb-6 text-sm bg-emerald-50 text-emerald-600 space-y-2">
                 <div>{success}</div>
-                {resetUrl && (
+                {(resetUrl || mode === 'forgot-password') && (
                   <div className="pt-2 border-t border-emerald-200">
                     <a 
-                      href={resetUrl}
+                      href={resetUrl || '/reset-password'}
                       onClick={onClose}
                       className="inline-block bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors"
                     >

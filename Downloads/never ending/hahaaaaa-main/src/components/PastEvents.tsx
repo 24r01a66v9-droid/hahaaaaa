@@ -94,10 +94,9 @@ export default function PastEvents() {
   const [apiBase, setApiBase] = useState<string | null>(null);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadCaption, setUploadCaption] = useState("");
-  const [showUploadOnOpen, setShowUploadOnOpen] = useState(false);
+  const [uploadingMultiple, setUploadingMultiple] = useState(false);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [uploadCaptions, setUploadCaptions] = useState<string[]>(["", "", ""]);
   const [editedEvents, setEditedEvents] = useState<Record<string, Event>>(() => {
     if (typeof window === "undefined") return {};
     try {
@@ -131,6 +130,7 @@ export default function PastEvents() {
   });
   const [newEventUploadFile, setNewEventUploadFile] = useState<File | null>(null);
   const [newEventUploadCaption, setNewEventUploadCaption] = useState("");
+  const [showUploadOnOpen, setShowUploadOnOpen] = useState(false);
   const newEventFileRef = useRef<HTMLInputElement>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingActivities, setEditingActivities] = useState("");
@@ -461,47 +461,52 @@ export default function PastEvents() {
 
   const handleEventPhotoUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAdmin || !uploadFile || !selectedEvent || uploading) return;
+    if (!isAdmin || uploadFiles.length === 0 || !selectedEvent || uploadingMultiple) return;
 
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", uploadFile);
-    formData.append("title", uploadCaption || selectedEvent.title);
-    formData.append("category", "event");
-    formData.append("sub_category", selectedEvent.title);
-    formData.append("date", selectedEvent.date);
-
+    setUploadingMultiple(true);
+    
     try {
-      const uploadUrl = `${apiBase || ''}/api/photos`;
-      const response = await fetch(uploadUrl, buildAuthRequestInit({
-        method: "POST",
-        body: formData,
-      }));
+      // Upload all selected files
+      const uploadPromises = uploadFiles.map((file, index) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", uploadCaptions[index] || selectedEvent.title);
+        formData.append("category", "event");
+        formData.append("sub_category", selectedEvent.title);
+        formData.append("date", selectedEvent.date);
 
-      if (!response.ok) {
-        // Try to read more informative error body
-        const text = await response.text().catch(() => null);
-        console.error("Event photo upload failed", { status: response.status, statusText: response.statusText, body: text });
-        const errorData = text ? (() => {
-          try { return JSON.parse(text); } catch { return { error: text }; }
-        })() : null;
-        throw new Error(errorData?.error || `Upload failed (${response.status})`);
+        return fetch(`${apiBase || ''}/api/photos`, buildAuthRequestInit({
+          method: "POST",
+          body: formData,
+        }));
+      });
+
+      const responses = await Promise.all(uploadPromises);
+      
+      for (const response of responses) {
+        if (!response.ok) {
+          const text = await response.text().catch(() => null);
+          console.error("Event photo upload failed", { status: response.status, statusText: response.statusText, body: text });
+          const errorData = text ? (() => {
+            try { return JSON.parse(text); } catch { return { error: text }; }
+          })() : null;
+          throw new Error(errorData?.error || `Upload failed (${response.status})`);
+        }
       }
 
       await fetchEventPhotos(selectedEvent.title);
-      setUploadFile(null);
-      setUploadCaption("");
+      setUploadFiles([]);
+      setUploadCaptions(["", "", ""]);
     } catch (error) {
-      console.error("Failed to upload event photo", error);
-      // Provide clearer guidance for network errors vs server errors
+      console.error("Failed to upload event photos", error);
       const message = (error instanceof Error && error.message) ? error.message : String(error);
       if (message.toLowerCase().includes("fetch failed") || message.toLowerCase().includes("networkerror") || message.toLowerCase().includes("failed to fetch")) {
         alert("Upload failed: network error communicating with the server. Ensure the dev server is running (npm --prefix ./hahaaaaa-main run dev) and try again. See console for details.");
       } else {
-        alert(message || "Failed to upload event photo");
+        alert(`Upload failed: ${message}`);
       }
     } finally {
-      setUploading(false);
+      setUploadingMultiple(false);
     }
   };
 
@@ -771,7 +776,7 @@ export default function PastEvents() {
                       className="ml-4 mt-8 inline-flex items-center gap-2 rounded-full border border-stone-300 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon transition-all hover:border-brand-maroon hover:bg-brand-maroon hover:text-white"
                     >
                       <Camera size={14} />
-                      Add Photo
+                      Add Photos
                     </button>
                   )}
 
@@ -827,45 +832,103 @@ export default function PastEvents() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon/40">{selectedEvent.occasion}</p>
                   <h3 className="mt-3 text-3xl font-serif text-brand-maroon">{selectedEvent.title}</h3>
                 </div>
-                <button onClick={() => setSelectedEvent(null)} className="rounded-full bg-stone-100 p-3 text-stone-500 transition-all hover:bg-brand-maroon hover:text-white">
+                <button onClick={() => { setSelectedEvent(null); setShowUploadOnOpen(false); setUploadFiles([]); setUploadCaptions(["", "", ""]); }} className="rounded-full bg-stone-100 p-3 text-stone-500 transition-all hover:bg-brand-maroon hover:text-white">
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-8 flex flex-col items-center justify-center gap-6">
-                {eventPhotos.length > 0 ? (
-                  <img src={eventPhotos[0].url} alt={selectedEvent.title} className="max-h-[70vh] w-auto rounded-[1.25rem] object-cover" />
-                ) : selectedEvent.image ? (
-                  <img src={selectedEvent.image} alt={selectedEvent.title} className="max-h-[70vh] w-auto rounded-[1.25rem] object-cover" />
-                ) : (
-                  <div className="h-64 w-full rounded-[1.25rem] bg-stone-100" />
+              <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-8">
+                {/* Photo Gallery Grid */}
+                {eventPhotos.length > 0 && (
+                  <div className="mb-8">
+                    <div className={`grid gap-6 ${eventPhotos.length === 1 ? 'grid-cols-1' : eventPhotos.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                      {eventPhotos.slice(0, 3).map((photo, idx) => (
+                        <div key={idx} className="rounded-[1.25rem] overflow-hidden bg-stone-100">
+                          <img src={photo.url} alt={photo.title || selectedEvent.title} className="w-full h-48 object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!eventPhotos.length && !selectedEvent.image && (
+                  <div className="mb-8 h-64 w-full rounded-[1.25rem] bg-stone-100" />
+                )}
+
+                {!eventPhotos.length && selectedEvent.image && (
+                  <div className="mb-8">
+                    <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-64 rounded-[1.25rem] object-cover" />
+                  </div>
                 )}
 
                 {isAdmin && showUploadOnOpen && (
-                  <form onSubmit={handleEventPhotoUpload} className="w-full max-w-2xl bg-white rounded-lg p-6 border border-stone-200">
-                    <p className="mb-3 text-sm text-brand-maroon/70">Click to upload event photo</p>
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-4 cursor-pointer">
-                        <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && setUploadFile(e.target.files[0])} className="hidden" />
-                        <div className="px-4 py-2 rounded-lg border border-stone-300 bg-stone-50 text-sm">Choose file</div>
-                      </label>
-                      {uploadFile && (
-                        <img src={URL.createObjectURL(uploadFile)} alt="preview" className="h-16 w-16 rounded-md object-cover" />
-                      )}
-                      <input
-                        type="text"
-                        placeholder="Caption (optional)"
-                        value={uploadCaption}
-                        onChange={(e) => setUploadCaption(e.target.value)}
-                        className="flex-1 rounded-3xl border border-stone-200 px-4 py-2 text-sm"
-                      />
+                  <form onSubmit={handleEventPhotoUpload} className="w-full bg-white rounded-lg p-6 border border-stone-200">
+                    <p className="mb-4 text-sm font-bold text-brand-maroon uppercase tracking-widest">Upload Up to 3 Images</p>
+                    <div className="space-y-4">
+                      {[0, 1, 2].map((index) => (
+                        <div key={index} className="flex items-center gap-3 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                          <label className="flex items-center gap-3 cursor-pointer flex-1">
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  const newFiles = [...uploadFiles];
+                                  newFiles[index] = e.target.files[0];
+                                  setUploadFiles(newFiles.filter((f, i) => i < 3));
+                                }
+                              }} 
+                              className="hidden" 
+                            />
+                            <div className="px-4 py-2 rounded-lg border border-stone-300 bg-stone-50 text-sm text-brand-maroon font-bold hover:bg-stone-100 transition-colors">
+                              Choose Image {index + 1}
+                            </div>
+                          </label>
+                          {uploadFiles[index] && (
+                            <>
+                              <img src={URL.createObjectURL(uploadFiles[index])} alt={`preview ${index}`} className="h-12 w-12 rounded-md object-cover" />
+                              <input
+                                type="text"
+                                placeholder="Caption (optional)"
+                                value={uploadCaptions[index] || ""}
+                                onChange={(e) => {
+                                  const newCaptions = [...uploadCaptions];
+                                  newCaptions[index] = e.target.value;
+                                  setUploadCaptions(newCaptions);
+                                }}
+                                className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newFiles = uploadFiles.filter((_, i) => i !== index);
+                                  const newCaptions = uploadCaptions.filter((_, i) => i !== index);
+                                  setUploadFiles(newFiles);
+                                  setUploadCaptions([...newCaptions, ""]);
+                                }}
+                                className="text-red-600 hover:text-red-700 font-bold text-sm"
+                              >
+                                Remove
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))}
                     </div>
 
-                    <div className="mt-4 flex items-center gap-3">
-                      <button type="submit" disabled={!uploadFile || uploading} className="rounded-full bg-brand-maroon px-5 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white disabled:opacity-60">
-                        {uploading ? "Uploading..." : "Upload"}
+                    <div className="mt-6 flex items-center gap-3">
+                      <button 
+                        type="submit" 
+                        disabled={uploadFiles.length === 0 || uploadingMultiple} 
+                        className="rounded-full bg-brand-maroon px-6 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-white disabled:opacity-60 hover:bg-stone-900 transition-colors"
+                      >
+                        {uploadingMultiple ? `Uploading ${uploadFiles.length} image${uploadFiles.length !== 1 ? 's' : ''}...` : `Upload ${uploadFiles.length} Image${uploadFiles.length !== 1 ? 's' : ''}`}
                       </button>
-                      <button type="button" onClick={() => { setShowUploadOnOpen(false); setUploadFile(null); setUploadCaption(""); }} className="rounded-full border border-stone-300 px-5 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon">
+                      <button 
+                        type="button" 
+                        onClick={() => { setShowUploadOnOpen(false); setUploadFiles([]); setUploadCaptions(["", "", ""]); }} 
+                        className="rounded-full border border-stone-300 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-brand-maroon hover:bg-stone-50 transition-colors"
+                      >
                         Cancel
                       </button>
                     </div>

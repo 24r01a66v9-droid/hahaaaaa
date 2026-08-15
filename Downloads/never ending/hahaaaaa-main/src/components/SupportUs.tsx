@@ -19,7 +19,7 @@ export default function SupportUs() {
           <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center border border-white/20 shadow-2xl group hover:rotate-12 transition-transform duration-500">
             <Share2 size={48} className="text-white" />
           </div>
-          <h2 className="text-6xl md:text-8xl font-serif text-white tracking-tighter leading-none italic">Boost Our <br />Mission.</h2>
+          <h2 className="text-6xl md:text-8xl font-serif text-white tracking-tighter leading-none italic">Boost Our <br />Mission</h2>
           <p className="text-2xl text-white/80 leading-relaxed font-serif italic max-w-3xl">
             "Help us reach more people! Follow, Like, Share, and <span className="text-white font-bold underline underline-offset-8 decoration-white/30">Repost</span> our updates on LinkedIn to spread hope and amplify our impact."
           </p>

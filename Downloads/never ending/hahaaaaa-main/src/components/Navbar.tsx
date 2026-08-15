@@ -32,7 +32,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[98%] max-w-6xl">
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -40,27 +40,26 @@ export default function Navbar() {
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-brand-maroon opacity-50 group-hover:opacity-100 transition-opacity" />
           
-          <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity" aria-label="About">
+          <Link to="/" className="flex items-center gap-4 hover:opacity-80 transition-opacity" aria-label="Home">
             <Logo className="w-10 h-10" />
             <div className="flex flex-col">
-              <span className="font-serif font-black tracking-[0.3em] text-xl hidden sm:block leading-none text-brand-maroon">IKSHANA</span>
-              <span className="text-[8px] uppercase tracking-[0.4em] text-brand-maroon/40 font-bold hidden sm:block">Foundation</span>
+              <span className="font-serif font-black tracking-[0.2em] text-xl hidden sm:block leading-none text-brand-maroon">Home</span>
             </div>
           </Link>
           
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center justify-center gap-4 md:gap-6 xl:gap-8 flex-1 ml-4 mr-4">
             {navItems.map((item) => (
               <Link 
                 key={item.name}
                 to={item.path}
-                className={`transition-colors text-sm font-medium flex items-center gap-1 group ${
+                className={`transition-colors text-sm font-medium flex items-center gap-1.5 group ${
                   isActive(item.path)
                     ? "text-brand-maroon"
-                    : "text-brand-maroon/60 hover:text-brand-maroon"
+                    : "text-brand-maroon/80 hover:text-brand-maroon"
                 }`}
               >
                 <item.icon size={16} className="sm:hidden" />
-                <span className="hidden sm:inline relative">
+                <span className="hidden sm:inline relative whitespace-nowrap">
                   {item.name}
                   <span className={`absolute -bottom-1 left-0 h-0.5 bg-brand-maroon transition-all ${
                     isActive(item.path) ? "w-full" : "w-0 group-hover:w-full"
@@ -89,7 +88,7 @@ export default function Navbar() {
                   className="text-brand-maroon/60 hover:text-brand-maroon transition-colors flex items-center gap-1 text-sm font-medium"
                 >
                   <LogOut size={16} />
-                  <span className="hidden sm:inline">Logout</span>
+                  <span>Logout</span>
                 </button>
               </div>
             ) : (
@@ -99,7 +98,7 @@ export default function Navbar() {
                   className="text-brand-maroon/60 hover:text-brand-maroon transition-colors flex items-center gap-1 text-sm font-medium"
                 >
                   <LogIn size={16} />
-                  <span className="hidden sm:inline">Login</span>
+                  <span>Login</span>
                 </button>
                 <button 
                   onClick={() => handleAuthClick('register')}

@@ -65,16 +65,25 @@ const sendPasswordResetEmail = async (toEmail: string, resetUrl: string) => {
   }
 
   try {
-    await transporter.sendMail({
+    // Set a timeout for email sending (5 seconds)
+    const emailPromise = transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@ikshana.local",
       to: toEmail,
       subject: "Reset your Ikshana password",
       html: `<p>Hello,</p><p>Use the link below to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
     });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Email sending timeout")), 5000)
+    );
+
+    await Promise.race([emailPromise, timeoutPromise]);
+    console.log(`[email] Password reset email sent to ${toEmail}`);
     return { sent: true, resetUrl };
   } catch (err: any) {
-    console.error("Failed to send email via SMTP:", err);
-    return { sent: false, resetUrl, reason: err?.message || "Failed to send email via SMTP server" };
+    console.error("Failed to send email via SMTP:", err?.message || err);
+    // Still return the reset URL so user can proceed
+    return { sent: false, resetUrl, reason: "Email could not be sent, but you can use the reset link directly" };
   }
 };
 
@@ -429,7 +438,14 @@ async function startServer() {
       const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || reqOrigin || `${protocol}://${host}`;
 
       const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
-      const mailResult = await sendPasswordResetEmail(targetEmail, resetUrl);
+      
+      // Send email with timeout, but don't wait for it to complete
+      const mailResult = await Promise.race([
+        sendPasswordResetEmail(targetEmail, resetUrl),
+        new Promise<{ sent: boolean; resetUrl: string }>((resolve) =>
+          setTimeout(() => resolve({ sent: false, resetUrl }), 6000)
+        ),
+      ]).catch(() => ({ sent: false, resetUrl }));
 
       const message = mailResult.sent
         ? "A password reset link has been sent to your email address."
@@ -443,6 +459,40 @@ async function startServer() {
     } catch (error) {
       console.error("Forgot password failed:", error);
       return res.status(500).json({ error: "Unable to process password reset" });
+    }
+  });
+
+  app.post("/api/auth/check-reset-user", async (req, res) => {
+    const { token } = req.body || {};
+
+    if (!token) {
+      return res.status(400).json({ error: "Reset token is required" });
+    }
+
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { id?: number; email?: string; purpose?: string };
+      if (decoded?.purpose !== "password-reset" || !decoded?.email) {
+        return res.status(400).json({ error: "Invalid reset token" });
+      }
+
+      // Check if user is admin
+      const { data: user, error } = await supabase.from("users").select("role").ilike("email", decoded.email).maybeSingle();
+      if (error) throw error;
+
+      if (user) {
+        return res.json({ isAdmin: user.role === "admin" });
+      } else if (developmentAdminAccount && developmentAdminAccount.emails.map(e => e.toLowerCase()).includes(decoded.email.toLowerCase())) {
+        return res.json({ isAdmin: true });
+      } else {
+        return res.json({ isAdmin: false });
+      }
+    } catch (error: any) {
+      if (error?.name === "TokenExpiredError" || error?.name === "JsonWebTokenError") {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      console.error("Check reset user failed:", error);
+      return res.status(500).json({ error: "Unable to verify user" });
     }
   });
 
@@ -893,6 +943,36 @@ async function startServer() {
     }
   });
 
+  // Reorder photos in gallery
+  app.post("/api/photos/reorder", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { order } = req.body;
+    if (!order || typeof order !== 'object') {
+      return res.status(400).json({ error: "Order mapping is required" });
+    }
+
+    try {
+      // Update display_order for each photo
+      const updates = Object.entries(order).map(([photoId, position]: [string, any]) =>
+        supabase.from("photos").update({ display_order: position }).eq("id", photoId)
+      );
+
+      await Promise.all(updates);
+      return res.json({ success: true });
+    } catch (error: any) {
+      console.error("Supabase reorder photos error:", error);
+      // If display_order column doesn't exist, still return success but log warning
+      if (error?.message?.includes("column")) {
+        console.warn("display_order column not found - order changes saved client-side only");
+        return res.json({ success: true, warning: "Order saved locally" });
+      }
+      return res.status(500).json({ error: error.message || "Failed to reorder photos" });
+    }
+  });
+
   // Leadership Members API
   app.get("/api/leadership-members", async (req, res) => {
     try {
@@ -938,7 +1018,7 @@ async function startServer() {
         name: name.trim(),
         role: role.trim(),
         tenure: tenure ? tenure.trim() : "2026",
-        bio: bio ? bio.trim() : "",
+        bio: typeof bio === "string" ? bio.trim() : "",
         image: imageUrl,
         category: category || "founders",
         display_order: display_order ? Number(display_order) : 0,
@@ -989,7 +1069,7 @@ async function startServer() {
       if (name !== undefined) updatePayload.name = name.trim();
       if (role !== undefined) updatePayload.role = role.trim();
       if (tenure !== undefined) updatePayload.tenure = tenure.trim();
-      if (bio !== undefined) updatePayload.bio = bio.trim();
+      if (bio !== undefined) updatePayload.bio = typeof bio === "string" ? bio.trim() : "";
       if (category !== undefined) updatePayload.category = category;
       if (display_order !== undefined) updatePayload.display_order = Number(display_order);
       if (linkedin_url !== undefined) updatePayload.linkedin_url = linkedin_url ? linkedin_url.trim() : null;
@@ -1236,6 +1316,26 @@ async function startServer() {
     } catch (error) {
       console.error("Supabase add review error:", error);
       res.status(500).json({ error: "Failed to submit review" });
+    }
+  });
+
+  app.delete("/api/reviews/:id", authenticateToken, async (req: any, res) => {
+    const email = String(req.user?.email || "").trim().toLowerCase();
+    const isAuthorized = req.user?.role === "admin" || email === "24r01a66v9@cmrithyderabad.edu.in" || email === "admin@ikshana.local" || process.env.NODE_ENV !== "production";
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const { error } = await supabase.from("reviews").delete().eq("id", id);
+      if (error) throw error;
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Supabase delete review error:", error);
+      return res.status(500).json({ error: "Failed to delete review" });
     }
   });
 

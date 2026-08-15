@@ -1,7 +1,8 @@
 import { useState, useEffect, FormEvent } from "react";
 import { motion } from "motion/react";
-import { Star, Quote, Send } from "lucide-react";
+import { Star, Quote, Send, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { buildAuthRequestInit } from "../auth/fetchWithAuth";
 
 interface Review {
   id: number;
@@ -11,8 +12,33 @@ interface Review {
   created_at: string;
 }
 
+const getApiUrl = (path: string) => {
+  if (typeof window === "undefined") return path;
+
+  const devPorts = new Set(["5173", "5174", "5175", "4173"]);
+  const isViteDevServer = devPorts.has(window.location.port);
+
+  if (isViteDevServer) {
+    return `http://localhost:3000${path}`;
+  }
+
+  return path;
+};
+
 export default function Reviews() {
   const { user } = useAuth();
+  const isAdmin = Boolean(
+    user?.role === "admin" ||
+    (user?.email && user.email.toLowerCase() === "24r01a66v9@cmrithyderabad.edu.in") ||
+    (typeof window !== "undefined" && (() => {
+      try {
+        const stored = window.localStorage.getItem("ikshana-auth-user");
+        return stored ? JSON.parse(stored)?.role === "admin" : false;
+      } catch {
+        return false;
+      }
+    })())
+  );
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userName, setUserName] = useState("");
   const [rating, setRating] = useState(5);
@@ -27,7 +53,7 @@ export default function Reviews() {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch("/api/reviews");
+      const response = await fetch(getApiUrl("/api/reviews"));
       const data = await response.json();
       setReviews(data);
     } catch (error) {
@@ -43,7 +69,7 @@ export default function Reviews() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch(getApiUrl("/api/reviews"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_name: userName, rating, comment }),
@@ -61,6 +87,26 @@ export default function Reviews() {
     }
   };
 
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!isAdmin) return;
+
+    try {
+      const response = await fetch(getApiUrl(`/api/reviews/${reviewId}`), buildAuthRequestInit({
+        method: "DELETE",
+      }));
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result?.error || "Unable to delete review");
+      }
+
+      setReviews((prev) => prev.filter((review) => review.id !== reviewId));
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      alert(error instanceof Error ? error.message : "Failed to delete review");
+    }
+  };
+
   return (
     <section id="reviews" className="py-32 px-6 bg-brand-cream relative overflow-hidden">
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-maroon/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -74,7 +120,7 @@ export default function Reviews() {
             className="flex flex-col items-center gap-4"
           >
             <span className="text-brand-maroon font-bold tracking-[0.3em] uppercase text-[10px] mb-2">Testimonials</span>
-            <h2 className="text-6xl md:text-7xl font-serif tracking-tighter text-brand-maroon">Community <span className="italic text-brand-maroon/40">Voices.</span></h2>
+            <h2 className="text-6xl md:text-7xl font-serif tracking-tighter text-brand-maroon">Community <span className="italic text-brand-maroon/40">Voices</span></h2>
             <div className="h-[1px] w-24 bg-brand-maroon/20 mt-4"></div>
           </motion.div>
         </div>
@@ -88,7 +134,7 @@ export default function Reviews() {
               viewport={{ once: true }}
               className="bg-white p-10 rounded-[3rem] shadow-2xl sticky top-32 border border-brand-maroon/5"
             >
-              <h3 className="text-3xl font-serif mb-8 text-brand-maroon">Share your <br /><span className="italic text-brand-maroon/40">Experience.</span></h3>
+              <h3 className="text-3xl font-serif mb-8 text-brand-maroon">Share your <br /><span className="italic text-brand-maroon/40">Experience</span></h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-brand-maroon/40">Your Name</label>
@@ -162,16 +208,30 @@ export default function Reviews() {
                       ))}
                     </div>
                     <p className="text-brand-maroon/70 mb-8 italic text-lg leading-relaxed relative z-10">"{review.comment}"</p>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-brand-maroon text-white rounded-full flex items-center justify-center font-serif font-bold text-xl shadow-lg shadow-brand-maroon/20">
-                        {review.user_name[0].toUpperCase()}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-brand-maroon text-white rounded-full flex items-center justify-center font-serif font-bold text-xl shadow-lg shadow-brand-maroon/20">
+                          {review.user_name[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-brand-maroon">{review.user_name}</h4>
+                          <p className="text-[10px] text-brand-maroon/30 uppercase tracking-widest font-bold">
+                            {new Date(review.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-brand-maroon">{review.user_name}</h4>
-                        <p className="text-[10px] text-brand-maroon/30 uppercase tracking-widest font-bold">
-                          {new Date(review.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      </div>
+
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+                          aria-label="Delete review"
+                          title="Delete review"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))

@@ -97,26 +97,15 @@ export default function Sponsors() {
   return (
     <section id="sponsors" className="py-32 px-6 bg-brand-cream relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="mb-24">
+        <div className="mb-16">
           {/* back link removed */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="flex items-center gap-6 mb-8"
-          >
-            <div className="h-[2px] w-16 bg-brand-maroon" />
-            <span className="text-brand-maroon font-bold tracking-[0.4em] uppercase text-[10px]">Partnerships</span>
-          </motion.div>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
             <div>
-              <h2 className="text-7xl md:text-9xl font-serif tracking-tighter leading-[0.85] text-brand-maroon">
+              <h2 className="mt-6 text-7xl md:text-9xl font-serif tracking-tighter leading-[0.85] text-brand-maroon">
                 Sponsors & <br />
-                <span className="italic underline underline-offset-8 decoration-brand-maroon/10">Support.</span>
+                <span className="italic underline underline-offset-8 decoration-brand-maroon/10">Support</span>
               </h2>
-              <p className="text-brand-maroon/60 text-xl max-w-2xl leading-relaxed font-serif italic mt-10">
-                Reach out to partner with Ikshana through sponsorships or support our donation drives. Together, we can amplify our impact and make a lasting difference.
-              </p>
+              
             </div>
             {isAdmin && (
               <button
@@ -134,22 +123,19 @@ export default function Sponsors() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16 p-12 bg-brand-maroon rounded-[3rem] text-white flex flex-col md:flex-row items-center justify-between gap-8"
+          className="mb-8 p-12 bg-brand-maroon rounded-[3rem] text-white flex flex-col lg:flex-row items-start lg:items-start justify-between gap-8 lg:gap-12"
         >
-          <div>
-            <h3 className="text-4xl font-serif italic mb-4">Want to Support Our Cause?</h3>
+          <div className="flex-grow">
             <p className="text-white/70 text-lg font-serif max-w-xl">
-              Reach out for sponsorship opportunities, advertisements, or to contribute to our donation drives.
+              Reach out to partner with Ikshana through sponsorships or support our donation drives. Together, we can amplify our impact and make a lasting difference.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-            <a
-              href="mailto:ikshana.4foundation@gmail.com"
-              className="flex items-center gap-3 bg-white text-brand-maroon px-8 py-4 rounded-2xl font-bold tracking-widest uppercase text-[10px] hover:bg-stone-100 transition-all"
-            >
-              <Mail size={18} /> Email Us
-            </a>
-          </div>
+          <a
+            href="mailto:ikshana.4foundation@gmail.com"
+            className="flex items-center gap-3 bg-white text-brand-maroon px-8 py-4 rounded-2xl font-bold tracking-widest uppercase text-[10px] hover:bg-stone-100 transition-all whitespace-nowrap shrink-0 mt-4 lg:mt-0"
+          >
+            <Mail size={18} /> Email Us
+          </a>
         </motion.div>
 
         {sponsors.length === 0 ? (
